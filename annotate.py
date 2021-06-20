@@ -3,79 +3,76 @@ import numpy as np
 import cv2
 from os import path
 import json
+from os import path as pt
 from matplotlib import pyplot
 
-csv = pd.read_csv('geology-exposed-classifications.csv')
-csv = csv.filter(['workflow_name', 'annotations', 'subject_data'])
-csv = csv[csv['workflow_name'] == 'Outcrop ID']
-print(csv.shape[0])
-write = 1
+def scale_points(path, size=(256, 256)):
+    width, height = size
 
-def outline_image(image, points):
- print ('k')
+    with open(path + 'annotations/instances_default.json') as f:
+      data = json.load(f)
 
-outcrop = 0
-no_outcrop = 0
-part_outcrop = 0
+    scaling_width = data['images'][0]['width']/width
+    scaling_height = data['images'][0]['height']/height
 
-for i in range(csv.shape[0]):
-    obj = json.loads(csv.iloc[i]['subject_data'])
-    obj = obj[list(obj.keys())[0]]
-    if path.exists('pics/' + obj['Filename']):
-        image = cv2.imread('pics/' + obj['Filename'])
-        original = cv2.imread('pics/' + obj['Filename'])
-        annotations = json.loads(csv.iloc[i]['annotations'])
-        #print(annotations)
-        if annotations[0]['value'] == 'All rock wall outcrop':
-            outcrop = outcrop + 1
-            cv2.imwrite('annotated/labelled/' + str(write) + '.jpg', image)
-            cv2.imwrite('annotated/original/' + str(write) + '.jpg', original)
-            write = write + 1
+    for i in range(len(data['images'])):
+        data['images'][i]['width'] = width
+        data['images'][i]['height'] = height
 
-        if annotations[0]['value'] == 'Part of the image shows an outcrop, ' \
-                                      'but I can also see other things, such as ground, sky, or vegetation':
-            part_outcrop = part_outcrop + 1
-            if len(annotations) >= 2:
-                val = annotations[1]['value']
-                if (val != None and len(val) > 0):
-                    points = val[0]['points']
-                    pts = []
-                    for j in range(len(points)):
-                        pts.append([int(points[j]['x']), int(points[j]['y'])])
-                    pts = np.asarray(pts)
+    for i in range(len(data['annotations'])):
+        for j in range(len(data['annotations'][i]['segmentation'][0])):
+            if j % 2 == 0:
+                data['annotations'][i]['segmentation'][0][j] /= scaling_width
+            else:
+                data['annotations'][i]['segmentation'][0][j] /= scaling_height
 
-                    for j in range(len(points)):
-                        if j == len(points) - 1:
-                            pt1 = (int(points[j]['x']), int(points[j]['y']))
-                            pt2 = (int(points[0]['x']), int(points[0]['y']))
-                            image = cv2.line(image, pt1, pt2, (0,  0, 0), 10)
-                        else:
-                            pt1 = (int(points[j]['x']), int(points[j]['y']))
-                            pt2 = (int(points[j+1]['x']), int(points[j+1]['y']))
-                            image = cv2.line(image, pt1, pt2, (0, 0, 0), 10)
+        for j in range(4):
+            if j % 2 == 0:
+                data['annotations'][i]['bbox'][j] /= scaling_width
+            else:
+                data['annotations'][i]['bbox'][j] /= scaling_height
 
-                    new_image = np.zeros(image.shape, dtype="uint8")
-                    cv2.fillPoly(new_image, [pts], (255, 255, 255))
-                    #cv2.imshow('new', new_image)
-                    #cv2.waitKey(0)
-                    image = cv2.bitwise_and(new_image, image)
-                    #cv2.imshow('image', image)
-                    #cv2.waitKey(0)
-                cv2.imwrite('annotated/labelled/' + str(write) + '.jpg', image)
-                cv2.imwrite('annotated/original/' + str(write) + '.jpg', original)
-                write = write + 1
-
-        if annotations[0]['value'] == 'No outcrop- it is all something else, like ground or sky or plants.':
-            no_outcrop = no_outcrop + 1
+        data['annotations'][i]['area'] /= (scaling_width*scaling_height)
 
 
+    with open(path + 'annotations/annotations_1.1.json', 'w') as f:
+      json.dump(data, f)
 
 
-print(outcrop)
-print(no_outcrop)
-print(part_outcrop)
+path = 'data/1.1/'
+
+def annotate(path):
+    with open(path + 'annotations/annotations_1.1.json') as f:
+        data = json.load(f)
+
+    for i in range(len(data['images'])):
+        print(data['images'][i]['file_name'])
+        image = cv2.imread(path + data['images'][i]['file_name'])
+        anns = data['annotations'][i]
+        points = anns['segmentation'][0]
+        points = np.asarray(points)
+
+        pts = []
+        for j in range(int(len(points)/2)):
+            pts.append([int(points[2*j]), int(points[2*j+1])])
+        pts = np.asarray(pts)
 
 
+        for j in range(int(len(points)/2)):
+            if j == int(len(points)/2) - 1:
+                image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
+                                 (int(points[0]), int(points[1])), (0, 0, 0), 2)
+            else:
+                image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
+                                 (int(points[2*(j+1)]), int(points[2*(j+1)+1])), (0, 0, 0), 2)
+
+        #cv2.imshow('test', image)
+        #cv2.waitKey(0)
+        new_image = np.zeros(image.shape, dtype="uint8")
+        cv2.fillPoly(new_image, np.array([pts], dtype=np.int32), (255, 255, 255))
+        image = cv2.bitwise_and(new_image, image)
+        cv2.imwrite(path + '/annotated/' + data['images'][i]['file_name'], image)
 
 
-
+scale_points(path)
+annotate(path)
