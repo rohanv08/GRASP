@@ -264,8 +264,8 @@ def load_and_test(model_path, dataset_path):
 
 
 #concatenate('data/1.1/', 'data/1.1/annotated/', 'data/1.1/concatenated/')
-#train_main('1.2.npz')
+train_main('1.2.npz')
 #create_npz('data/1.1/concatenated/', '1.1.npz')
-load_and_test('models/model.h5', '1.1.npz')
+#load_and_test('models/model.h5', '1.1.npz')
 
 
