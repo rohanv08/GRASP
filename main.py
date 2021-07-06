@@ -6,12 +6,13 @@ from tensorflow.keras import models, Model, initializers
 from tensorflow.keras.optimizers import Adam
 from os import listdir
 from matplotlib import pyplot
+import cv2
 
 
 def load_images(path_dir, size=(256, 512)):
     src_list, tar_list = list(), list()
     for filename in listdir(path_dir):
-        if '.jpg' in filename:
+        if '.PNG' in filename:
             pixels = load_img(path_dir + filename, target_size=size)
             pixels = img_to_array(pixels)
             src_list.append(pixels[:, :256])
@@ -31,17 +32,6 @@ def generate_fake_samples(g_model, samples, patch_shape):
     X = g_model.predict(samples)
     y = np.zeros((len(X), patch_shape, patch_shape, 1))
     return X, y
-
-
-path = "archive/facades/facades/train/"
-
-
-#[src_images, tar_images] = load_images(path)
-#filename = 'facades_256.npz'
-#np.savez_compressed(filename, src_images, tar_images)
-#print('Saved dataset: ', filename)
-
-#print(src_images.shape, tar_images.shape)
 
 
 def discriminator(shape=(256, 256, 3)):
@@ -140,10 +130,9 @@ def gan(gen_model, dis_model, image_shape):
     return model
 
 
-def train(d_model, g_model, gan_model, dataset, n_epochs=500, n_batch=1):
+def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
     n_patch = d_model.output_shape[1]
     trainA, trainB = dataset
-
     bat_per_epo = int(len(trainA) / n_batch)
     print(bat_per_epo)
     n_steps = bat_per_epo * n_epochs
@@ -186,11 +175,11 @@ def summarize_performance(step, g_model, dataset, n_samples=3):
         pyplot.imshow(X_realB[i])
     # save plot to file
     filename1 = 'plot_%06d.png' % (step + 1)
-    pyplot.savefig(filename1)
+    pyplot.savefig('plots/' + filename1)
     pyplot.close()
     # save the generator model
-    filename2 = 'model_%06d.h5' % (step + 1)
-    g_model.save(filename2)
+    filename2 = 'model.h5'
+    g_model.save('models/' + filename2)
     print('>Saved: %s and %s' % (filename1, filename2))
 
 
@@ -205,12 +194,78 @@ def load_real_samples(filename):
     return [X1, X2]
 
 
-dataset = load_real_samples('facades_256.npz')
-print('Loaded', dataset[0].shape, dataset[1].shape)
-image_shape = dataset[0].shape[1:]
-d_model = discriminator(image_shape)
-g_model = models.load_model('model_001600.h5')
-gan_model = gan(g_model, d_model, image_shape)
-train(d_model, g_model, gan_model, dataset)
-g_model.save('trained_model.h5')
-print("saved")
+
+def train_main(load):
+    dataset = load_real_samples(load)
+    print('Loaded', dataset[0].shape, dataset[1].shape)
+    image_shape = dataset[0].shape[1:]
+    d_model = discriminator(image_shape)
+    g_model = generator(image_shape)
+    gan_model = gan(g_model, d_model, image_shape)
+    train(d_model, g_model, gan_model, dataset)
+    g_model.save('trained_model.h5')
+    print("saved")
+
+
+def create_npz(path, filename):
+    print('started')
+    [src_images, tar_images] = load_images(path)
+    np.savez_compressed(filename, src_images, tar_images)
+    print('Saved dataset: ', filename)
+    print(src_images.shape, tar_images.shape)
+
+
+def concatenate (original, annotated, concatenated):
+    for filename in listdir(original):
+        if '.PNG' in filename:
+            original_im = cv2.imread(original + filename)
+            annotated_im = cv2.imread(annotated + filename)
+            concat = cv2.hconcat([original_im, annotated_im])
+            cv2.imwrite(concatenated + filename, concat)
+    print('done')
+
+def load_and_validate(model_path, dataset_path):
+    g_model = models.load_model(model_path)
+    optimizer = Adam(lr=0.0001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
+    g_model.compile(optimizer=optimizer,
+                  loss=['binary_crossentropy', 'mae'],
+                  metrics=['accuracy'])
+    dataset = load_real_samples(dataset_path)
+    print('Loaded', dataset[0].shape, dataset[1].shape)
+    [src, tar] = dataset
+    results = g_model.evaluate(src, tar)
+    print(results)
+
+def load_and_test(model_path, dataset_path):
+    g_model = models.load_model(model_path)
+    dataset = load_real_samples(dataset_path)
+    print('Loaded', dataset[0].shape, dataset[1].shape)
+    [src, tar] = dataset
+    sample = src[:1000]
+    print(sample.shape)
+    predicted = g_model.predict(sample)
+    #predicted = (predicted + 1) / 2.0
+    #tar = (tar + 1) / 2.0
+    print(len(predicted))
+    for i in range(len(predicted)):
+        pyplot.subplot(1, 2, 1)
+        pyplot.imshow(predicted[i])
+        pyplot.subplot(1, 2, 2)
+        pyplot.imshow(tar[i])
+        pyplot.axis('off')
+        filename = str(i) + '.png'
+        pyplot.savefig('plots/' + filename)
+    print('done')
+
+
+
+
+
+
+
+#concatenate('data/1.1/', 'data/1.1/annotated/', 'data/1.1/concatenated/')
+#train_main('1.2.npz')
+#create_npz('data/1.1/concatenated/', '1.1.npz')
+load_and_test('models/model.h5', '1.1.npz')
+
+
