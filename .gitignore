@@ -22,3 +22,9 @@ vids
 results.npz
 models
 plots
+WithBeddingPlane
+3class_test.npz
+3class_train.npz
+thoracic
+WithBeddingPlane
+test

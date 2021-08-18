@@ -1,4 +1,5 @@
 import numpy as np
+import tensorflow as tf
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.layers import Input, Concatenate, Conv2D, LeakyReLU, BatchNormalization, Activation, \
     Conv2DTranspose, Dropout
@@ -7,6 +8,10 @@ from tensorflow.keras.optimizers import Adam
 from os import listdir
 from matplotlib import pyplot
 import cv2
+
+config = tf.compat.v1.ConfigProto()
+config.gpu_options.allow_growth = True
+session = tf.compat.v1.Session(config=config)
 
 
 def load_images(path_dir, size=(256, 512)):
@@ -215,6 +220,16 @@ def create_npz(path, filename):
     print(src_images.shape, tar_images.shape)
 
 
+def concatenate_thoracic(original, annotated, concatenated):
+    for i in range(650):
+        original_im = cv2.imread(original + 'frame_' + str(i).zfill(6) + '.PNG')
+        original_im = cv2.resize(original_im, (256, 256))
+        annotated_im = cv2.imread(annotated + 'mask_' + str(i).zfill(6) + '.PNG')
+        annotated_im = cv2.resize(annotated_im, (256, 256))
+        concat = cv2.hconcat([original_im, annotated_im])
+        cv2.imwrite(concatenated + 'image_' + str(i).zfill(6) + '.PNG', concat)
+    print('done')
+
 def concatenate (original, annotated, concatenated):
     for filename in listdir(original):
         if '.PNG' in filename:
@@ -264,8 +279,10 @@ def load_and_test(model_path, dataset_path):
 
 
 #concatenate('data/1.1/', 'data/1.1/annotated/', 'data/1.1/concatenated/')
-train_main('1.2.npz')
-#create_npz('data/1.1/concatenated/', '1.1.npz')
+train_main('3class_train.npz')
+#create_npz('thoracic/concatenated/', 'thoracic_binary.npz')
+#concatenate_thoracic('thoracic/images/', 'thoracic/binary masks/', 'thoracic/concatenated/')
+#print('done')
 #load_and_test('models/model.h5', '1.1.npz')
 
 

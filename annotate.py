@@ -9,7 +9,7 @@ from matplotlib import pyplot
 def scale_points(path, size=(256, 256)):
     width, height = size
 
-    with open(path + 'annotations/instances_default.json') as f:
+    with open(path + 'instances_default.json') as f:
       data = json.load(f)
 
     scaling_width = data['images'][0]['width']/width
@@ -35,11 +35,11 @@ def scale_points(path, size=(256, 256)):
         data['annotations'][i]['area'] /= (scaling_width*scaling_height)
 
 
-    with open(path + 'annotations/annotations_1.1.json', 'w') as f:
+    with open(path + 'annotations_scaled.json', 'w') as f:
       json.dump(data, f)
 
 
-path = 'data/1.1/'
+path = 'data/1.2/'
 
 def annotate(path):
     with open(path + 'annotations/annotations_1.1.json') as f:
@@ -73,6 +73,20 @@ def annotate(path):
         image = cv2.bitwise_and(new_image, image)
         cv2.imwrite(path + '/annotated/' + data['images'][i]['file_name'], image)
 
+def understand_data(path):
+    with open('WithBeddingPlane/Video1/annotations_scaled.json') as f:
+      data = json.load(f)
+      #print(data)
 
-scale_points(path)
-annotate(path)
+    #for i in range(len(data['images'])):
+    print(data['images'][0]['file_name'])
+    anns0 = data['annotations'][0]
+    anns1 = data['annotations'][1]
+    anns2 = data['annotations'][2]
+    print(anns0)
+    print(anns1)
+    print(anns2)
+
+understand_data(path)
+#annotate(path)
+#scale_points('WithBeddingPlane/Video2/')
