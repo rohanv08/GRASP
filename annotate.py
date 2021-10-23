@@ -39,7 +39,7 @@ def scale_points(path, size=(256, 256)):
       json.dump(data, f)
 
 
-path = 'data/1.2/'
+path = 'data/1.1/'
 
 def annotate(path):
     with open(path + 'annotations/annotations_1.1.json') as f:
@@ -61,10 +61,10 @@ def annotate(path):
         for j in range(int(len(points)/2)):
             if j == int(len(points)/2) - 1:
                 image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
-                                 (int(points[0]), int(points[1])), (0, 0, 0), 2)
+                                 (int(points[0]), int(points[1])), (0, 0, 0), 10)
             else:
                 image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
-                                 (int(points[2*(j+1)]), int(points[2*(j+1)+1])), (0, 0, 0), 2)
+                                 (int(points[2*(j+1)]), int(points[2*(j+1)+1])), (0, 0, 0), 10)
 
         #cv2.imshow('test', image)
         #cv2.waitKey(0)
@@ -87,6 +87,7 @@ def understand_data(path):
     print(anns1)
     print(anns2)
 
-understand_data(path)
+#understand_data(path)
+scale_points('WithBeddingPlane/Vid1/')
 #annotate(path)
-#scale_points('WithBeddingPlane/Video2/')
+

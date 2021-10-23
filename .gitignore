@@ -28,3 +28,14 @@ WithBeddingPlane
 thoracic
 WithBeddingPlane
 test
+trained
+3class_train.npz
+3class_all_images.npz
+3class_all_images_binary.npz
+3class_test.npz
+3class_all_images_BPonly.npz
+3class_test_ONLYBP.npz
+3class_train_BPonly.npz
+scores.txt
+testImages
+thoracic_multi.npz

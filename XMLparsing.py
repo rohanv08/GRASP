@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import cv2
+import numpy as np
 def parse_annotate(xmlpath, imgdirec):
     tree = ET.parse(xmlpath)
     root = tree.getroot()
@@ -13,9 +14,10 @@ def parse_annotate(xmlpath, imgdirec):
         second = points[1].split(',')
         first = [float(first[0])/scalingw, float(first[1])/scalingh]
         second = [float(second[0]) / scalingw, float(second[1]) / scalingh]
-        image = cv2.imread('WithBeddingPlane/Vid2/annotated_mask_multiclass/mask_' + str(count).zfill(6) + '.PNG')
-        image = cv2.line(image, (int(first[0]), int(first[1])), (int(second[0]), int(second[1])), (255, 255, 255))
-        cv2.imwrite('WithBeddingPlane/Vid2/annotated_mask_multiclass/mask_' + str(count).zfill(6) + '.PNG', image)
+        #image = cv2.imread('WithBeddingPlane/Vid1/frames/frame_' + str(count).zfill(6) + '.PNG')
+        image =  np.zeros((256,256,3), np.uint8)
+        image = cv2.line(image, (int(first[0]), int(first[1])), (int(second[0]), int(second[1])), (255, 255, 255), 7)
+        cv2.imwrite('WithBeddingPlane/Vid2/ONLYBP/mask_' + str(count).zfill(6) + '.PNG', image)
         count += 1
         print(count)
     print(count)
