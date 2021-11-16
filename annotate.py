@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import cv2
+from keras_preprocessing.image import load_img, img_to_array
 from os import path
 import json
 from os import path as pt
@@ -8,7 +9,6 @@ from matplotlib import pyplot
 
 def scale_points(path, size=(256, 256)):
     width, height = size
-
     with open(path + 'instances_default.json') as f:
       data = json.load(f)
 
@@ -39,19 +39,20 @@ def scale_points(path, size=(256, 256)):
       json.dump(data, f)
 
 
-path = 'data/1.1/'
+path = 'WithBeddingPlane/Vid1/annotations_scaled.json'
 
 def annotate(path):
-    with open(path + 'annotations/annotations_1.1.json') as f:
+    with open(path + 'annotations_scaled.json') as f:
         data = json.load(f)
-
+    print(len(data['images']))
     for i in range(len(data['images'])):
+        print(i)
         print(data['images'][i]['file_name'])
-        image = cv2.imread(path + data['images'][i]['file_name'])
+        image = cv2.imread(path + 'frames/' + data['images'][i]['file_name'])
         anns = data['annotations'][i]
         points = anns['segmentation'][0]
         points = np.asarray(points)
-
+        print(points)
         pts = []
         for j in range(int(len(points)/2)):
             pts.append([int(points[2*j]), int(points[2*j+1])])
@@ -61,25 +62,25 @@ def annotate(path):
         for j in range(int(len(points)/2)):
             if j == int(len(points)/2) - 1:
                 image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
-                                 (int(points[0]), int(points[1])), (0, 0, 0), 10)
+                                 (int(points[0]), int(points[1])), (0, 0, 0), 1)
             else:
                 image = cv2.line(image, (int(points[2*j]), int(points[2*j+1])),
-                                 (int(points[2*(j+1)]), int(points[2*(j+1)+1])), (0, 0, 0), 10)
+                                 (int(points[2*(j+1)]), int(points[2*(j+1)+1])), (0, 0, 0), 1)
 
         #cv2.imshow('test', image)
         #cv2.waitKey(0)
-        new_image = np.zeros(image.shape, dtype="uint8")
-        cv2.fillPoly(new_image, np.array([pts], dtype=np.int32), (255, 255, 255))
-        image = cv2.bitwise_and(new_image, image)
-        cv2.imwrite(path + '/annotated/' + data['images'][i]['file_name'], image)
+        #new_image = np.zeros(image.shape, dtype="uint8")
+        #cv2.fillPoly(image, np.array([pts], dtype=np.int32), (0, 0, 0))
+        #image = cv2.bitwise_or(new_image, image)
+        cv2.imwrite(path + '/outcropB&W/' + data['images'][i]['file_name'], image)
 
 def understand_data(path):
-    with open('WithBeddingPlane/Video1/annotations_scaled.json') as f:
+    with open(path) as f:
       data = json.load(f)
       #print(data)
 
     #for i in range(len(data['images'])):
-    print(data['images'][0]['file_name'])
+    print(data['images'][0])
     anns0 = data['annotations'][0]
     anns1 = data['annotations'][1]
     anns2 = data['annotations'][2]
@@ -87,7 +88,15 @@ def understand_data(path):
     print(anns1)
     print(anns2)
 
+def annotate_BP (path):
+    src_list, tar_list = list(), list()
+    for i in range(ran):
+        filename = 'image_' + str(i).zfill(6) + '.PNG'
+        pixels = load_img(path + filename, target_size=size)
+        pixels = img_to_array(pixels)
+        src_list.append(pixels[:, :256])
+        tar_list.append(pixels[:, 256:])
 #understand_data(path)
-scale_points('WithBeddingPlane/Vid1/')
-#annotate(path)
+#scale_points('WithBeddingPlane/Vid1/')
+annotate('WithBeddingPlane/Vid1/')
 

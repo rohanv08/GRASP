@@ -39,3 +39,6 @@ trained
 scores.txt
 testImages
 thoracic_multi.npz
+Outcrop_all.npz
+Outcrop_test.npz
+Outcrop_train.npz

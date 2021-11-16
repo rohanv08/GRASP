@@ -36,11 +36,11 @@ def load_real_samples(filename):
 def convert_to_bw_and_form_npz(path_dir, size=(256, 256)):
     count = 0
     for file in listdir(path_dir):
-        if '.JPG' in file:
+        if '.PNG' in file:
             img = cv2.imread(path_dir + file)
             image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            image = cv2.resize(image, (256, 256))
-            cv2.imwrite("test/Jan7/monochrome/" + str(count) + ".PNG", image)
+            #image = cv2.resize(image, (256, 256))
+            cv2.imwrite("data/1.2/outcropB&W/" + "frame_" + str(count).zfill(6) + ".PNG", image)
             count += 1
 
 
@@ -52,7 +52,7 @@ def concatenate(original, annotated, concatenated, ran):
         print(i)
         original_im = cv2.imread(original + 'frame_' + str(i).zfill(6) + '.PNG')
         original_im = cv2.resize(original_im, (256, 256))
-        annotated_im = cv2.imread(annotated + 'frame_' + str(i).zfill(6) + '.PNG')
+        annotated_im = cv2.imread(annotated + 'mask_' + str(i).zfill(6) + '.PNG')
         annotated_im = cv2.resize(annotated_im, (256, 256))
         concat = cv2.hconcat([original_im, annotated_im])
         cv2.imwrite(concatenated + 'image_' + str(i).zfill(6) + '.PNG', concat)
@@ -201,8 +201,8 @@ def split(vid1, vid2):
     tar_list = np.asarray(tar_list)
     src_list1 = np.asarray(src_list1)
     tar_list1 = np.asarray(tar_list1)
-    np.savez_compressed('3class_train_BPonly.npz', src_list, tar_list)
-    np.savez_compressed('3class_all_images_BPonly.npz', src_list1, tar_list1)
+    np.savez_compressed('Outcrop_train.npz', src_list, tar_list)
+    np.savez_compressed('Outcrop_all.npz', src_list1, tar_list1)
     print(src_list.shape)
     print(src_list1.shape)
     print(tar_list1.shape)
@@ -218,15 +218,16 @@ def split(vid1, vid2):
 
     src_list = np.asarray(src_list)
     tar_list = np.asarray(tar_list)
-    np.savez_compressed('3class_test_ONLYBP.npz', src_list, tar_list)
+    np.savez_compressed('Outcrop_test.npz', src_list, tar_list)
     print(tar_list.shape)
 
-#concatenate('thoracic/images/', 'thoracic/images/', 'thoracic/concatenated/', 1000)
-#split('WithBeddingPlane/Vid1/beddingplane/', 'WithBeddingPlane/Vid2/beddingplane/')
-test("")
+#concatenate('WithBeddingPlane/Vid2/outcropB&W/', 'WithBeddingPlane/Vid2/outcropB&Wbp/',
+           # 'WithBeddingPlane/Vid2/outcropConcat/', 2344)
+split('WithBeddingPlane/Vid2/outcropConcat/', 'WithBeddingPlane/Vid1/outcropConcat/')
+#test("")
 #create_npz('thoracic/concatenated/', 'thoracic_multi.npz')
 #test_rotated_blurred('3class_all_images.npz', 1000, " mulit 20 degree tilt", 20)
-
+#convert_to_bw_and_form_npz('data/1.2/annotated/')
 #test_rotated_blurred('3class_all_images.npz', 1000, " mulit 30 degree tilt", 30)
 
 #test_rotated_blurred('3class_all_images.npz', 1000, " mulit 45 degree tilt", 45)

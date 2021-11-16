@@ -152,12 +152,12 @@ def train(d_model, g_model, gan_model, dataset, n_epochs=100, n_batch=1):
         g_loss, _, _ = gan_model.train_on_batch(X_realA, [y_real, X_realB])
         print('>%d, d1[%.3f] d2[%.3f] g[%.3f]' % (i + 1, d_loss1, d_loss2, g_loss))
         # summarize model performance
-        #if (i + 1) % (bat_per_epo) == 0:
-        #    summarize_performance(i, g_model, dataset)
+        if (i + 1) % (bat_per_epo) == 0:
+           summarize_performance(i, g_model, dataset)
 
 
 def summarize_performance(step, g_model, dataset, n_samples=3):
-    # select a sample of input images
+    s = '''# select a sample of input images
     [X_realA, X_realB], _ = generate_real_samples(dataset, n_samples, 1)
     # generate a batch of fake samples
     X_fakeB, _ = generate_fake_samples(g_model, X_realA, 1)
@@ -184,10 +184,10 @@ def summarize_performance(step, g_model, dataset, n_samples=3):
     filename1 = 'plot_%06d.png' % (step + 1)
     pyplot.savefig('plots/' + filename1)
     pyplot.close()
-    # save the generator model
+    # save the generator model '''
     filename2 = 'model.h5'
     g_model.save('models/' + filename2)
-    print('>Saved: %s and %s' % (filename1, filename2))
+   # print('>Saved: %s and %s' % (filename1, filename2))
 
 
 def load_real_samples(filename):
@@ -208,28 +208,28 @@ def load_samples_random(filename):
     # scale from [0,255] to [-1,1]
     X1 = (X1 - 127.5) / 127.5
     X2 = (X2 - 127.5) / 127.5
-    p = np.random.permutation(len(X1))
-    return [X1[p], X2[p]]
+    #p = np.random.permutation(len(X1))
+    return [X1, X2]
 
 
 
 def train_main(load):
     dataset = load_samples_random(load)
     print('Loaded', dataset[0].shape, dataset[1].shape)
-    mark = int(dataset[0].shape[0]*0.8)
-    train_arr = [dataset[0][:mark], dataset[1][:mark]]
-    print(train_arr[0].shape)
+    #mark = int(dataset[0].shape[0]*0.8)
+    #train_arr = [dataset[0][:mark], dataset[1][:mark]]
+    #print(train_arr[0].shape)
     #print(type(train))
     #train = np.asarray(train)
     #print(np.shape(train))
-    test_arr = [dataset[0][mark:], dataset[1][mark:]]
-    print(mark)
+    #test_arr = [dataset[0][mark:], dataset[1][mark:]]
+    #print(mark)
     #print(test_arr)
     image_shape = dataset[0].shape[1:]
     d_model = discriminator(image_shape)
     g_model = generator(image_shape)
     gan_model = gan(g_model, d_model, image_shape)
-    train(d_model, g_model, gan_model, train_arr)
+    train(d_model, g_model, gan_model, dataset)
     g_model.save('trained_model_multiclass.h5')
     #tt.test(test_arr)
 
@@ -302,7 +302,7 @@ def load_and_test(model_path, dataset_path):
 
 #concatenate('data/1.1/', 'data/1.1/annotated/', 'data/1.1/concatenated/')
 for i in range(1):
-    train_main('3class_train_BPonly.npz')
+    train_main('Outcrop_train.npz')
 #create_npz('thoracic/concatenated/', 'thoracic_binary.npz')
 #concatenate_thoracic('thoracic/images/', 'thoracic/binary masks/', 'thoracic/concatenated/')
 #print('done')
